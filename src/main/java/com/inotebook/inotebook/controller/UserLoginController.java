@@ -31,35 +31,40 @@ public class UserLoginController {
 	//Create user using PostMapping. Doesn't require Auth
 	@PostMapping("/createUser")
 	public ResponseEntity<?> createUser(@RequestBody User user) {
+		Boolean success = false;
 		try {
             if(user.getName().length()<3) {
-            	return new ResponseEntity<>("Name is invalid", HttpStatus.BAD_REQUEST);
+            	return new ResponseEntity<>(success, HttpStatus.BAD_REQUEST);
             }
             else if(user.getPassword().length()<6) {
-            	return new ResponseEntity<>("Password must be 6 characters", HttpStatus.BAD_REQUEST);
+            	return new ResponseEntity<>(success, HttpStatus.BAD_REQUEST);
             }
             user.setDate(LocalDate.now());
             User savedUser = userService.saveUser(user);
-            return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
+            return new ResponseEntity<>(success = true, HttpStatus.CREATED);
 		} catch (Exception e) {
             // Handle general exceptions or constraint violations
-            return new ResponseEntity<>("Error creating user: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+//			"Error creating user: " + e.getMessage()
+            return new ResponseEntity<>(success, HttpStatus.BAD_REQUEST);
         }
 		
 	}
 	
 	@PostMapping("/login")
 	public ResponseEntity<?> loginUser(@RequestBody User user){
+		Boolean success = false;
 		String email = user.getEmail();
         String password = user.getPassword();
         String tokenOrMessage = userService.validateEmailAndPassword(email, password);
         
         if (tokenOrMessage.equals("Invalid email ID") || tokenOrMessage.equals("Invalid password")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(tokenOrMessage);
+        	success = false;
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(success);
         } else {
             // Return JWT token if credentials are valid
-            Map<String, String> response = new HashMap<>();
-            response.put("token", tokenOrMessage);
+        	success = true;
+            Map<Boolean, String> response = new HashMap<>();
+            response.put(success, tokenOrMessage);
             return ResponseEntity.ok(response);
         }
 		
